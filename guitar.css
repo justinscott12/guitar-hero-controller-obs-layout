@@ -1,0 +1,40 @@
+/**
+ * Guitar Hero controller overlay - CSS equivalent of guitar.json
+ * Image: Guitar.png (741×250)
+ * Keys: Green=V, Red=C, Yellow=X, Blue=Z, Orange=Shift
+ */
+
+:root {
+  --guitar-width: 741px;
+  --guitar-height: 250px;
+}
+
+.guitar-overlay {
+  position: relative;
+  width: var(--guitar-width);
+  height: var(--guitar-height);
+  background: url("Guitar.png") no-repeat center;
+  background-size: contain;
+}
+
+/* Fret button hit areas - positioned to match guitar.json mapping */
+.fret {
+  position: absolute;
+  width: 32px;
+  height: 42px;
+  border-radius: 4px;
+  background: transparent;
+  transition: box-shadow 0.05s ease-out, background 0.05s ease-out;
+}
+
+.fret.pressed {
+  box-shadow: 0 0 14px 6px currentColor, inset 0 0 10px rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.25);
+}
+
+/* Order: Orange, Yellow, Blue, Red, Green (left to right, body to headstock) */
+.fret-orange { left: 455px; top: 85px; color: #ff8c00; }
+.fret-yellow { left: 500px; top: 85px; color: #ffcc00; }
+.fret-blue   { left: 545px; top: 85px; color: #0066ff; }
+.fret-red    { left: 590px; top: 85px; color: #ff3333; }
+.fret-green  { left: 635px; top: 85px; color: #33cc33; }
