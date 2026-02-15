@@ -13,20 +13,63 @@
 </head>
 <body>
   <div id="ws-dot" title="WebSocket: gray=disconnected, green=connected (keys work when unfocused)"></div>
-  <div class="guitar-overlay">
-    <div class="fret fret-green" data-keycode="47"></div>
-    <div class="fret fret-red" data-keycode="46"></div>
-    <div class="fret fret-yellow" data-keycode="45"></div>
-    <div class="fret fret-blue" data-keycode="44"></div>
-    <div class="fret fret-orange" data-keycode="42,54"></div>
+  <div id="guitar-wrap" style="position:relative;width:741px;height:250px;background:url('Guitar.png') no-repeat 0 0;background-size:741px 250px;">
+    <svg id="guitar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 741 250" width="741" height="250" style="position:absolute;left:0;top:0;pointer-events:none;">
+      <defs>
+        <style>
+          .fret-fill { fill: none; transition: fill 0.08s ease-out; }
+          .fret-fill.pressed { fill: currentColor; }
+          .fret-orange { color: #fd8b00; }
+          .fret-yellow { color: #ffcc00; }
+          .fret-blue { color: #0066ff; }
+          .fret-red { color: #ff3333; }
+          .fret-green { color: #33cc33; }
+        </style>
+      </defs>
+      <g id="fret-container"></g>
+    </svg>
   </div>
 
   <script>
+    // === FRET TUNING - edit these variables only ===
+    const FRET = {
+      width: 18,                                     // total width of each fill
+      top: 112,                                      // top y coordinate
+      get bottom() { return this.top + 24; },        // bottom of sides (before curve)
+      get curveBottom() { return this.bottom + 6; }, // lowest point of curve
+      startX: 510,                                   // center x of leftmost fret (orange)
+      spacing: 24.5                                  // horizontal gap between fret centers
+    };
+
+    const FRET_ORDER = ['orange', 'blue', 'yellow', 'red', 'green'];
+
+    (function initFrets() {
+      const container = document.getElementById('fret-container');
+      const halfW = FRET.width / 2;
+      FRET_ORDER.forEach(function(name, i) {
+        const cx = FRET.startX + i * FRET.spacing;
+        const left = cx - halfW, right = cx + halfW;
+        const d = 'M ' + left + ' ' + FRET.top + ' L ' + left + ' ' + FRET.bottom + ' Q ' + cx + ' ' + FRET.curveBottom + ' ' + right + ' ' + FRET.bottom + ' L ' + right + ' ' + FRET.top + ' Z';
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'fret fret-' + name + ' fret-fill');
+        path.setAttribute('id', 'fret-' + name);
+        path.setAttribute('d', d);
+        container.appendChild(path);
+      });
+    })();
+
+    // Prevent OBS/CEF from throttling this page when the Interact window is closed
+    if ('locks' in navigator) {
+      navigator.locks.request('keep-awake', { mode: 'shared' }, function() {
+        return new Promise(function() {});
+      });
+    }
+
     const keyToFret = { 47: 'green', 46: 'red', 45: 'yellow', 44: 'blue', 42: 'orange', 54: 'orange' };
     const keyNameToFret = { 'v': 'green', 'c': 'red', 'x': 'yellow', 'z': 'blue', 'shift': 'orange' };
 
     function setPressedByName(name, pressed) {
-      const el = document.querySelector('.fret-' + name);
+      const el = document.getElementById('fret-' + name);
       if (el) el.classList.toggle('pressed', pressed);
     }
 
@@ -52,6 +95,7 @@
         const d = JSON.parse(e.data);
         if (d.event_type === 'key_pressed') setPressed(d.keycode, true);
         else if (d.event_type === 'key_released') setPressed(d.keycode, false);
+        document.body.offsetHeight; // force repaint so OBS shows updates when unfocused
       } catch (_) {}
     }
 

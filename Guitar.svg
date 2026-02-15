@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 741 250" width="741" height="250">
+  <defs>
+    <style>
+      .fret-fill { fill: none; transition: fill 0.05s ease-out; }
+      .fret-fill.pressed { fill: currentColor; }
+      .fret-orange { color: #ff8c00; }
+      .fret-yellow { color: #ffcc00; }
+      .fret-blue { color: #0066ff; }
+      .fret-red { color: #ff3333; }
+      .fret-green { color: #33cc33; }
+    </style>
+  </defs>
+  <!-- Guitar image as background -->
+  <image href="Guitar.png" x="0" y="0" width="741" height="250" preserveAspectRatio="xMidYMid meet"/>
+  <!-- Fret fill shapes - U-shaped paths matching the fret bowls (left to right: orange, yellow, blue, red, green) -->
+  <ellipse class="fret fret-orange fret-fill" id="fret-orange" cx="471" cy="106" rx="14" ry="18"/>
+  <ellipse class="fret fret-yellow fret-fill" id="fret-yellow" cx="516" cy="106" rx="14" ry="18"/>
+  <ellipse class="fret fret-blue fret-fill" id="fret-blue" cx="561" cy="106" rx="14" ry="18"/>
+  <ellipse class="fret fret-red fret-fill" id="fret-red" cx="606" cy="106" rx="14" ry="18"/>
+  <ellipse class="fret fret-green fret-fill" id="fret-green" cx="651" cy="106" rx="14" ry="18"/>
+</svg>
