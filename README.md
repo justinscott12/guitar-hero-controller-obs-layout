@@ -28,8 +28,9 @@ A browser-based overlay for **OBS Studio** that displays a guitar controller wit
 
 1. In OBS, add a **Browser** source.
 2. Check **Local file** and browse to `index.html` in this folder.
-3. Set **Width** to `800` and **Height** to `600`.
-4. Position and resize the source in your scene to your liking.
+3. Set **Width** to `800` and **Height** to `600` (default).
+4. Hit **OK**.
+5. Position and resize the source in your scene to your liking.
 
 
 ### 2. Run the keyboard bridge
@@ -57,6 +58,7 @@ The small dot in the overlay (bottom-right) turns **green** when the overlay is 
 | **start.bat** | Starts the keyboard bridge so the overlay updates while your game has focus. | Double-click **start.bat** (or run it from a terminal) when you want to record/stream. Keep the window open; press **Ctrl+C** to stop. Run **setup.bat** first if you haven’t. |
 | **index.html** | The overlay page OBS displays. It draws the guitar, five frets, strum up/down, whammy bar, and side (minus/plus) indicators, and listens for key presses and WebSocket messages from the bridge. | Add it as a **Browser** source in OBS and point the source to this file. You don’t run it yourself. |
 | **keyboard_bridge.py** | The Python app that captures your keyboard globally (frets, strum, whammy, side buttons) and forwards key down/up to the overlay over a local WebSocket on port 16899. | Started for you by **start.bat**. You can also run `python keyboard_bridge.py` manually after running **setup.bat** once. |
+| **poll_guitar_keys.py** | A small utility that polls your keyboard and prints each key press/release with character, keycode (ord/vk), and name. | Run `python poll_guitar_keys.py` (after **setup.bat** once) to see what your guitar/controller keys translate to—handy for mapping custom bindings or debugging. Stop with **Ctrl+C** or **Escape**. |
 | **requirements.txt** | List of Python packages the bridge needs. | Used by **setup.bat**; you don’t need to run pip yourself. |
 
 **Summary:** Use **index.html** in OBS as a Browser source. To have the overlay react to keys while you’re playing, run **setup.bat** once, then **start.bat** when you record/stream.
@@ -100,7 +102,7 @@ These are the two side buttons on the neck (often used for pause/menu in Clone H
 |------|--------|
 | Source type | **Browser** |
 | Local file | Path to `index.html` |
-| Dimensions | 741×250 (default); adjust in OBS as desired |
+| Dimensions | 800×600 (default); adjust in OBS as desired |
 | Background | Transparent (handled in the page) |
 
 No custom URL or server is required for the overlay itself; the bridge automatically runs a local WebSocket server on port **16899**.
@@ -114,6 +116,7 @@ No custom URL or server is required for the overlay itself; the bridge automatic
 | `index.html` | Overlay page: guitar graphic (Guitar.png), frets, strum, whammy, side buttons; key and WebSocket handling |
 | `guitar.css` | Styles for the overlay |
 | `keyboard_bridge.py` | Bridge: global keyboard hook + WebSocket server; forwards frets, strum, whammy (Alt+Gr), and side buttons (Esc, Enter) |
+| `poll_guitar_keys.py` | Utility: polls keyboard and prints key events (char, ord, vk, name) so you can see what your guitar/controller keys map to |
 | `requirements.txt` | Python deps for the bridge (`websockets`, `pynput`); used by setup.bat |
 | `Guitar.png` | Guitar artwork (you must provide or export; 741×250 recommended) |
 
