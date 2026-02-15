@@ -13,7 +13,7 @@
 </head>
 <body>
   <div id="ws-dot" title="WebSocket: gray=disconnected, green=connected (keys work when unfocused)"></div>
-  <div id="guitar-wrap" style="position:relative;width:741px;height:250px;background:url('Guitar.png') no-repeat 0 0;background-size:741px 250px;">
+  <div id="guitar-wrap" style="position:relative;width:741px;height:250px;">
     <svg id="guitar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 741 250" width="741" height="250" style="position:absolute;left:0;top:0;pointer-events:none;">
       <defs>
         <style>
@@ -24,9 +24,36 @@
           .fret-blue { color: #0066ff; }
           .fret-red { color: #ff3333; }
           .fret-green { color: #33cc33; }
+          /* Strum up/down: invisible until strummed, then white. Whammy: same. */
+        .strum-up-ind, .strum-down-ind, .whammy-ind { fill: transparent; stroke: transparent; transition: fill 0.06s ease-out, stroke 0.06s ease-out; }
+        .strum-up-ind path, .strum-down-ind path, .whammy-ind rect { stroke: inherit; fill: inherit; }
+        .strum-up-ind.active, .strum-down-ind.active, .whammy-ind.active { fill: #fff; stroke: #333; }
+        /* Side buttons: identical white circles, visible only when pressed (positions from ALT_MINUS, ALT_PLUS) */
+        .alt-minus-ind, .alt-plus-ind { fill: transparent; stroke: transparent; transition: fill 0.06s ease-out, stroke 0.06s ease-out; }
+        .alt-minus-ind circle, .alt-plus-ind circle { stroke: inherit; fill: inherit; }
+        .alt-minus-ind.active, .alt-plus-ind.active { fill: #fff; stroke: #333; }
         </style>
       </defs>
+      <!-- Base guitar image (static) -->
+      <image href="Guitar.png" x="0" y="0" width="741" height="250" preserveAspectRatio="xMidYMid meet"/>
       <g id="fret-container"></g>
+      <!-- Strum up = cyan, strum down = orange, whammy = purple (positions set from STRUM_UP, STRUM_DOWN, WHAMMY in script) -->
+      <g id="strum-up-indicator" class="strum-up-ind">
+        <path d="M 0 10 L 6 -4 L 12 10 Z" stroke="#333" stroke-width="1" fill="inherit"/>
+      </g>
+      <g id="strum-down-indicator" class="strum-down-ind">
+        <path d="M 0 -4 L 6 10 L 12 -4 Z" stroke="#333" stroke-width="1" fill="inherit"/>
+      </g>
+      <g id="whammy-indicator" class="whammy-ind">
+        <rect x="-92" y="-3" width="90" height="6" rx="1" stroke="#333" stroke-width="1" fill="inherit"/>
+      </g>
+      <!-- Side buttons: identical white circles (minus=ESC, plus=Enter); positions from ALT_MINUS, ALT_PLUS -->
+      <g id="alt-minus-indicator" class="alt-minus-ind">
+        <circle cx="0" cy="0" r="12" stroke="#333" stroke-width="1" fill="inherit"/>
+      </g>
+      <g id="alt-plus-indicator" class="alt-plus-ind">
+        <circle cx="0" cy="0" r="12" stroke="#333" stroke-width="1" fill="inherit"/>
+      </g>
     </svg>
   </div>
 
@@ -40,6 +67,13 @@
       startX: 510,                                   // center x of leftmost fret (orange)
       spacing: 24.5                                  // horizontal gap between fret centers
     };
+
+    // === STRUM / WHAMMY INDICATOR POSITIONS (viewBox 0 0 741 250) ===
+    const STRUM_UP = { x: 175, y: 115 };
+    const STRUM_DOWN = { x: 175, y: 135 };
+    const WHAMMY = { x: 170, y: 187 };
+    const ALT_MINUS = { x: 67, y: 140 };   // minus button (ESC), the slightly higher button
+    const ALT_PLUS = { x: 44, y: 156 };   // plus button (Enter), the slightly lower button
 
     const FRET_ORDER = ['orange', 'blue', 'yellow', 'red', 'green'];
 
@@ -56,6 +90,27 @@
         path.setAttribute('d', d);
         container.appendChild(path);
       });
+    })();
+
+    (function initIndicatorPositions() {
+      var el;
+      var strumScale = 1.5; 
+
+      el = document.getElementById('strum-up-indicator');
+      
+      if (el) el.setAttribute('transform', 'translate(' + STRUM_UP.x + ',' + STRUM_UP.y + ') scale(' + strumScale + ') translate(-6,-5.33)');
+      el = document.getElementById('strum-down-indicator');
+     
+      if (el) el.setAttribute('transform', 'translate(' + STRUM_DOWN.x + ',' + STRUM_DOWN.y + ') scale(' + strumScale + ') translate(-6,-0.67)');
+      el = document.getElementById('whammy-indicator');
+     
+      if (el) el.setAttribute('transform', 'translate(' + WHAMMY.x + ',' + WHAMMY.y + ')');
+      el = document.getElementById('alt-minus-indicator');
+     
+      if (el) el.setAttribute('transform', 'translate(' + ALT_MINUS.x + ',' + ALT_MINUS.y + ')');
+      el = document.getElementById('alt-plus-indicator');
+     
+      if (el) el.setAttribute('transform', 'translate(' + ALT_PLUS.x + ',' + ALT_PLUS.y + ')');
     })();
 
     // Prevent OBS/CEF from throttling this page when the Interact window is closed
@@ -79,22 +134,77 @@
       if (name) setPressedByName(name, pressed);
     }
 
+    // Strum up/down/whammy + side buttons (minus=ESC, plus=Enter)
+    const STRUM_UP_KEY = 38, STRUM_DOWN_KEY = 40, WHAMMY_KEY = 9;
+    const ALT_MINUS_KEY = 27, ALT_PLUS_KEY = 13;  // ESC, Enter
+
+    function setStrumUp(active) {
+      var el = document.getElementById('strum-up-indicator');
+      if (el) el.classList.toggle('active', !!active);
+    }
+
+    function setStrumDown(active) {
+      var el = document.getElementById('strum-down-indicator');
+      if (el) el.classList.toggle('active', !!active);
+    }
+
+    function setWhammy(active) {
+      var el = document.getElementById('whammy-indicator');
+      if (el) el.classList.toggle('active', !!active);
+    }
+
+    function setAltMinus(active) {
+      var el = document.getElementById('alt-minus-indicator');
+      if (el) el.classList.toggle('active', !!active);
+    }
+
+    function setAltPlus(active) {
+      var el = document.getElementById('alt-plus-indicator');
+      if (el) el.classList.toggle('active', !!active);
+    }
+
     document.addEventListener('keydown', function(e) {
       const k = e.key.toLowerCase();
       if (keyNameToFret[k]) { setPressedByName(keyNameToFret[k], true); e.preventDefault(); }
       else if (e.key === 'Shift') setPressedByName('orange', true);
+      else if (e.key === 'ArrowUp') { setStrumUp(true); e.preventDefault(); }
+      else if (e.key === 'ArrowDown') { setStrumDown(true); e.preventDefault(); }
+      else if (e.key === 'Tab') { setWhammy(true); e.preventDefault(); }
+      else if (e.key === 'Escape') { setAltMinus(true); e.preventDefault(); }
+      else if (e.key === 'Enter') { setAltPlus(true); e.preventDefault(); }
     });
+
     document.addEventListener('keyup', function(e) {
       const k = e.key.toLowerCase();
       if (keyNameToFret[k]) { setPressedByName(keyNameToFret[k], false); e.preventDefault(); }
       else if (e.key === 'Shift') setPressedByName('orange', false);
+      else if (e.key === 'ArrowUp') { setStrumUp(false); e.preventDefault(); }
+      else if (e.key === 'ArrowDown') { setStrumDown(false); e.preventDefault(); }
+      else if (e.key === 'Tab') { setWhammy(false); e.preventDefault(); }
+      else if (e.key === 'Escape') { setAltMinus(false); e.preventDefault(); }
+      else if (e.key === 'Enter') { setAltPlus(false); e.preventDefault(); }
     });
 
     function onMessage(e) {
       try {
         const d = JSON.parse(e.data);
-        if (d.event_type === 'key_pressed') setPressed(d.keycode, true);
-        else if (d.event_type === 'key_released') setPressed(d.keycode, false);
+        if (d.event_type === 'key_pressed') {
+          setPressed(d.keycode, true);
+          if (d.keycode === STRUM_UP_KEY) setStrumUp(true);
+          else if (d.keycode === STRUM_DOWN_KEY) setStrumDown(true);
+          else if (d.keycode === WHAMMY_KEY) setWhammy(true);
+          else if (d.keycode === ALT_MINUS_KEY) setAltMinus(true);
+          else if (d.keycode === ALT_PLUS_KEY) setAltPlus(true);
+        } else if (d.event_type === 'key_released') {
+          setPressed(d.keycode, false);
+          if (d.keycode === STRUM_UP_KEY) setStrumUp(false);
+          else if (d.keycode === STRUM_DOWN_KEY) setStrumDown(false);
+          else if (d.keycode === WHAMMY_KEY) setWhammy(false);
+          else if (d.keycode === ALT_MINUS_KEY) setAltMinus(false);
+          else if (d.keycode === ALT_PLUS_KEY) setAltPlus(false);
+        } else if (d.event_type === 'strum_up') setStrumUp(!!d.value);
+        else if (d.event_type === 'strum_down') setStrumDown(!!d.value);
+        else if (d.event_type === 'whammy') setWhammy(!!d.value);
         document.body.offsetHeight; // force repaint so OBS shows updates when unfocused
       } catch (_) {}
     }
@@ -104,6 +214,7 @@
     ws.onopen = () => dot.classList.add('connected');
     ws.onclose = () => { dot.classList.remove('connected'); setTimeout(() => location.reload(), 3000); };
     ws.onmessage = onMessage;
+
   </script>
 </body>
 </html>
